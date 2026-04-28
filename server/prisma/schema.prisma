@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  name           String
+  description    String   @default("")
+  client         String
+  status         String   @default("planning")
+  priority       String   @default("medium")
+  startDate      String
+  endDate        String
+  budget         Float
+  actualSpend    Float    @default(0)
+  forecastedCost Float
+  progress       Int      @default(0)
+  teamMemberIds  String[]
+  tags           String[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  actionItems ActionItem[]
+  forecasts   MonthlyForecast[]
+}
+
+model ActionItem {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String   @default("")
+  status      String   @default("todo")
+  priority    String   @default("medium")
+  assigneeId  String   @default("")
+  dueDate     String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model TeamMember {
+  id         String @id @default(cuid())
+  name       String
+  email      String @unique
+  role       String
+  department String @default("")
+}
+
+model MonthlyForecast {
+  id        String @id @default(cuid())
+  projectId String
+  month     String
+  planned   Float
+  actual    Float  @default(0)
+  forecast  Float
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, month])
+}
